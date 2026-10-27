@@ -336,7 +336,16 @@ class _ServicesScreenState extends State<ServicesScreen> {
       future: future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) return const Padding(padding: EdgeInsets.all(32), child: Center(child: CircularProgressIndicator()));
-        if (snapshot.hasError) return ErrorCard(message: 'Could not load services. Please check the internet connection and API settings.', onRetry: () => setState(() => future = RanlApi.instance.products()));
+        if (snapshot.hasError) {
+          return ErrorCard(
+            message: 'Could not load services:\n${snapshot.error}',
+            onRetry: () {
+              setState(() {
+                future = RanlApi.instance.products();
+              });
+            },
+          );
+        }
         final items = snapshot.data ?? [];
         if (items.isEmpty) return const InfoBanner();
         return Column(children: items.map((p) => Container(
