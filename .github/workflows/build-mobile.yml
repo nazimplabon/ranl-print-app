@@ -1,0 +1,58 @@
+name: Build RANL PRINT Mobile App
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+jobs:
+  android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate Android and iOS platform folders
+        run: flutter create --platforms=android,ios .
+      - name: Install packages
+        run: flutter pub get
+      - name: Analyze project
+        run: flutter analyze
+        continue-on-error: true
+      - name: Build release APK
+        run: flutter build apk --release
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ranl-print-android-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+
+  ios:
+    name: Build iOS app (unsigned)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate Android and iOS platform folders
+        run: flutter create --platforms=android,ios .
+      - name: Install packages
+        run: flutter pub get
+      - name: Build iOS without signing
+        run: flutter build ios --release --no-codesign
+      - name: Upload iOS app bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ranl-print-ios-app-unsigned
+          path: build/ios/iphoneos/Runner.app
+          if-no-files-found: error
